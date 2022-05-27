@@ -56,8 +56,38 @@ ERROR_MSGS = {
     NO_SUCH_USER        : 'No such user.'
 }
 
-# INET4Address = Tuple[str, int]        # TCP/UDP address => IPv4 and port
+INET4Address = Tuple[str, int]        # TCP/UDP address => IPv4 and port
 # FileReference = Union[str, BinaryIO]  # A path or a file object
+
+################################################################################
+##
+##      PUT/SEND AND GET/RECEIVE API
+##      These functions implement WRQ and RRQ methods of the TFTP 
+##       protocol.
+##
+################################################################################
+
+def get_file(server_add: INET4Address, filename: str):
+    """
+    RRQ a file given by filename from a remote TFTP server given
+    by serv_addr.
+    """
+    # 1. Abrir ficheiro "filename" para escrita
+    # 2. Criar socket DGRAM
+    # 3. Criar e enviar pacote RRQ através do socket
+    # 4. Esperar por um pacote (é suposto ser um DAT)
+    #    4.1 Obtivemos pacote => extrair o opcode 
+    #    4.2 Se for um DAT:
+    #       4.2.1 Extrair block_number e dados do DAT
+    #       4.2.2 Se for um block_number "esperado" então guardamos
+    #              os dados no ficheiro
+    #       4.2.3 Construimos e enviamos ACK correspondente
+    #   4.3 Se for um erro enviado pelo servidor (pacote ERR):
+    #       4.3.1 Assinalamos o erro e terminamos o RRQ
+    #   4.3 Se for um outro pacote qq:
+    #        4.3.1 Assinalamos um erro de protocolo
+    #   5. Voltar a 4
+#:
 
 ################################################################################
 ##
@@ -138,24 +168,24 @@ def unpack_opcode(packet: bytes) -> int:
     return opcode
 #:
 
-###############################################################
+################################################################################
 ##
 ##      ERRORS AND EXCEPTIONS
 ##
-###############################################################
+################################################################################
 
 class NetworkError(Exception):
     """
     Any network error, like "host not found", timeouts, etc.
     """
-    pass
+#:
 
 class ProtocolError(NetworkError):
     """
     A protocol error like unexpected or invalid opcode, wrong block 
     number, or any other invalid protocol parameter.
     """
-    pass
+#:
 
 class Err(Exception):
     """
@@ -170,6 +200,7 @@ class Err(Exception):
         super().__init__(f'TFTP Error {error_code}')
         self.error_code = error_code
         self.error_msg = error_msg.decode()
+#:
 
 def is_ascii_printable(txt: str) -> bool:
     return not set(txt) - set(string.printable)
