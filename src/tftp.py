@@ -59,6 +59,12 @@ ERROR_MSGS = {
 # INET4Address = Tuple[str, int]        # TCP/UDP address => IPv4 and port
 # FileReference = Union[str, BinaryIO]  # A path or a file object
 
+################################################################################
+##
+##      PACKET PACKING AND UNPACKING
+##
+################################################################################
+
 def pack_rrq(filename: str, mode: str = DEFAULT_MODE) -> bytes:
     return _pack_rq(RRQ, filename, mode)
 #:
@@ -131,6 +137,39 @@ def unpack_opcode(packet: bytes) -> int:
         raise ValueError(f'Unrecognized opcode {opcode}.')
     return opcode
 #:
+
+###############################################################
+##
+##      ERRORS AND EXCEPTIONS
+##
+###############################################################
+
+class NetworkError(Exception):
+    """
+    Any network error, like "host not found", timeouts, etc.
+    """
+    pass
+
+class ProtocolError(NetworkError):
+    """
+    A protocol error like unexpected or invalid opcode, wrong block 
+    number, or any other invalid protocol parameter.
+    """
+    pass
+
+class Err(Exception):
+    """
+    An error sent by the server. It may be caused because a read/write 
+    can't be processed. Read and write errors during file transmission 
+    also cause this message to be sent, and transmission is then 
+    terminated. The error number gives a numeric error code, followed 
+    by an ASCII error message that might contain additional, operating 
+    system specific information.    
+    """
+    def __init__(self, error_code: int, error_msg: bytes):
+        super().__init__(f'TFTP Error {error_code}')
+        self.error_code = error_code
+        self.error_msg = error_msg.decode()
 
 def is_ascii_printable(txt: str) -> bool:
     return not set(txt) - set(string.printable)
